@@ -12,7 +12,7 @@
 ### lookup tables or neural networks.
 
 from tkinter import *
-from thing import *
+from entity import *
 
 # Delay in microseconds between steps during Run
 STEP_DELAY = 0
@@ -37,7 +37,7 @@ class WorldFrame(Frame):
         self.grid()
 
 class World(Canvas):
-    """The arena where everything happens."""
+    """The arena where everyentity happens."""
 
     COLOR = 'black'
     """Color for the Canvas background."""
@@ -46,23 +46,23 @@ class World(Canvas):
     STEPS_PER_RUN = 500
     """Number of steps to run when the 'Run' button is pushed."""
 
-    THINGS = {# Diskoid: {'init': 30, 'min': 0, 'max': 50},
+    ENTITIES = {# Diskoid: {'init': 30, 'min': 0, 'max': 50},
               Ringoid: {'init': 5, 'min': 0, 'max': 50},
               Plasmoid: {'init': 75, 'min': 75, 'max': 80}}
 
     def __init__(self, frame, width=450, height=450):
-        """Initialize dimensions and create things."""
+        """Initialize dimensions and create entities."""
         Canvas.__init__(self, frame, bg = World.COLOR,
                         width=width, height=height)
         self.frame = frame
         self.width = width
         self.height = height
-        # Dict of things, indexed by their canvas object ids
-        self.things = {}
-        for tp, dct in World.THINGS.items():
-            for i in range(dct['init']):
-                self.add_thing(tp)
-        # Things to mate on a given time step
+        # Dict of entities, indexed by their canvas object ids
+        self.entities = {}
+        for entity_type, entity_count in World.ENTITIES.items():
+            for i in range(entity_count['init']):
+                self.add_entity(entity_type)
+        # Entities to mate on a given time step
         self.to_mate = []
         self.grid(row=0, columnspan=3)
         # Number of time steps elapsed so far
@@ -86,56 +86,56 @@ class World(Canvas):
         self.frame.evolve_button.config(text="Adapt")
         self.frame.evolve_button.bind('<Button-1>', self.adapt)
 
-    def add_thing(self, tp):
-        '''Create a thing of a given type and index.'''
-        coords = self.get_thing_coords()
-        thing = tp(self, coords)
-        self.things[thing.graphic_id] = thing
-        return thing
+    def add_entity(self, entity_type):
+        '''Create a entity of a given type and index.'''
+        coords = self.get_entity_coords()
+        entity = entity_type(self, coords)
+        self.entities[entity.graphic_id] = entity
+        return entity
 
-    def get_thing_coords(self):
-        '''Coordinates for a new thing.'''
-        x, y = (random.randint(Thing.RADIUS + World.EDGE,
-                               self.width - Thing.RADIUS - World.EDGE),
-                random.randint(Thing.RADIUS + World.EDGE,
-                               self.height - Thing.RADIUS - World.EDGE))
-        if self.overlaps_with(x - Thing.RADIUS, y - Thing.RADIUS,
-                              x + Thing.RADIUS, y + Thing.RADIUS,
+    def get_entity_coords(self):
+        '''Coordinates for a new entity.'''
+        x, y = (random.randint(Entity.RADIUS + World.EDGE,
+                               self.width - Entity.RADIUS - World.EDGE),
+                random.randint(Entity.RADIUS + World.EDGE,
+                               self.height - Entity.RADIUS - World.EDGE))
+        if self.overlaps_with(x - Entity.RADIUS, y - Entity.RADIUS,
+                              x + Entity.RADIUS, y + Entity.RADIUS,
                               Clod):
-            return self.get_thing_coords()
+            return self.get_entity_coords()
         else:
             return x, y
 
-    def get_overlapping(self, coords, except_thing):
-        '''Things that overlap with coordinates coords other than except_thing.'''
-        return [self.things[thing_id] for thing_id in \
+    def get_overlapping(self, coords, except_entity):
+        '''Entities that overlap with coordinates coords other than except_entity.'''
+        return [self.entities[entity_id] for entity_id in \
                 self.find_overlapping(coords[0], coords[1], coords[2], coords[3]) \
-                if thing_id in self.things and thing_id != except_thing]
+                if entity_id in self.entities and entity_id != except_entity]
 
     def overlaps_with(self, x1, y1, x2, y2, kind, exclude=-1):
         '''Does the region with coordinates x1, y1, x2, y2 overlap with any of type kind?'''
-        return some(lambda x: isinstance(self.things.get(x, None), kind) and x != exclude,
+        return some(lambda x: isinstance(self.entities.get(x, None), kind) and x != exclude,
                     self.find_overlapping(x1, y1, x2, y2))
 
-    def thing_overlaps_with(self, x, y, kind):
-        '''Does the Thing overlap with any of type kind?'''
-        return some(lambda x: isinstance(self.things.get(x, None), kind),
-                    self.find_overlapping(x - Thing.RADIUS, y - Thing.RADIUS,
-                                          x + Thing.RADIUS, y + Thing.RADIUS))
+    def entity_overlaps_with(self, x, y, kind):
+        '''Does the Entity overlap with any of type kind?'''
+        return some(lambda x: isinstance(self.entities.get(x, None), kind),
+                    self.find_overlapping(x - Entity.RADIUS, y - Entity.RADIUS,
+                                          x + Entity.RADIUS, y + Entity.RADIUS))
 
-    def get_point_overlapping(self, x, y, except_thing):
-        '''Things that overlap with a tiny square around x,y.'''
-        return self.get_overlapping((x - 1, y - 1, x + 1, y + 1), except_thing)
+    def get_point_overlapping(self, x, y, except_entity):
+        '''Entities that overlap with a tiny square around x,y.'''
+        return self.get_overlapping((x - 1, y - 1, x + 1, y + 1), except_entity)
 
-    def overlapping_thing(self, thing, kind):
-        '''First Thing of type kind that overlaps with thing.'''
-        x, y = thing.coords
-        for i in self.find_overlapping(x - Thing.RADIUS, y - Thing.RADIUS,
-                                       x + Thing.RADIUS, y + Thing.RADIUS):
-            if i != thing.graphic_id:
-                thing2 = self.things.get(i, None)
-                if isinstance(thing2, kind):
-                    return thing2
+    def overlapping_entity(self, entity, kind):
+        '''First Entity of type kind that overlaps with entity.'''
+        x, y = entity.coords
+        for i in self.find_overlapping(x - Entity.RADIUS, y - Entity.RADIUS,
+                                       x + Entity.RADIUS, y + Entity.RADIUS):
+            if i != entity.graphic_id:
+                entity2 = self.entities.get(i, None)
+                if isinstance(entity2, kind):
+                    return entity2
 
     def adjust_coords(self, x, y):
         '''Adjust coordinates of moved Critter assuming the world wraps around.'''
@@ -149,29 +149,29 @@ class World(Canvas):
             y = y - self.height
         return x, y
 
-    def n_things(self, typ):
-        '''Number of things in the world of a given type.'''
-        return len([thing for thing in self.things.values() if isinstance(thing, typ)])
+    def n_entities(self, typ):
+        '''Number of entities in the world of a given type.'''
+        return len([entity for entity in self.entities.values() if isinstance(entity, typ)])
 
     def step(self, event):
-        """Step each of the things and update the number of things if necessary."""
-        # Create new things if necessary
-        for tp, dct in World.THINGS.items():
-            mn = dct['min']
-            n = self.n_things(tp)
+        """Step each of the entities and update the number of entities if necessary."""
+        # Create new entities if necessary
+        for entity_type, entity_count in World.ENTITIES.items():
+            mn = entity_count['min']
+            n = self.n_entities(entity_type)
             if n < mn:
                 for x in range(mn - n):
-                    self.add_thing(tp)
+                    self.add_entity(entity_type)
         # Now do the actual stepping
-        for thing in self.things.values():
-            thing.step()
-        # Kill off the things that are supposed to die
+        for entity in self.entities.values():
+            entity.step()
+        # Kill off the entities that are supposed to die
         to_die = []
-        for thing in list(self.things.values()):
-            if isinstance(thing, Org) and not thing.alive:
-                del self.things[thing.graphic_id]
-                self.delete(thing.graphic_id)
-                thing.destroy()
+        for entity in list(self.entities.values()):
+            if isinstance(entity, Org) and not entity.alive:
+                del self.entities[entity.graphic_id]
+                self.delete(entity.graphic_id)
+                entity.destroy()
         # Mate the pairs selected to mate
         for parent1, parent2 in self.to_mate:
             self.mate(parent1, parent2)
@@ -181,18 +181,18 @@ class World(Canvas):
     def mate(self, parent1, parent2):
         '''Produce two offspring from parents and add them to the world.'''
         typ = type(parent1)
-        typ_max = World.THINGS[typ].get('max')
-        if typ_max and self.n_things(typ) < typ_max - 1:
+        typ_max = World.ENTITIES[typ].get('max')
+        if typ_max and self.n_entities(typ) < typ_max - 1:
             # Only allow mating if we won't go over the max for this type
-            offspring1 = self.add_thing(typ)
-            offspring2 = self.add_thing(typ)
+            offspring1 = self.add_entity(typ)
+            offspring2 = self.add_entity(typ)
             parent1.mate()
             parent2.mate()
             if parent1.genome and parent2.genome:
                 parent1.genome.crossover(parent2.genome, offspring1, offspring2)
 
     def run(self, event):
-        """Run step() 'steps' times on everything, and print the world."""
+        """Run step() 'steps' times on every entity, and print the world."""
         for s in range(World.STEPS_PER_RUN):
             # Wait for STEP_DELAY microseconds
             self.after(STEP_DELAY)
@@ -203,12 +203,12 @@ class World(Canvas):
     def show_stats(self):
         '''Print useful statistics about the types in the population of orgs.'''
         print('POPULATION AFTER', self.steps, 'STEPS')
-        for t_type, t in World.THINGS.items():
+        for t_type, t in World.ENTITIES.items():
             if issubclass(t_type, Org):
                 strength_sum = 0.0
                 n = 0
                 max_s = 0
-                for t1 in [t2 for t2 in self.things.values() if isinstance(t2, t_type)]:
+                for t1 in [t2 for t2 in self.entities.values() if isinstance(t2, t_type)]:
                     strength = t1.strength
                     strength_sum += strength
                     if strength > max_s:
@@ -218,7 +218,7 @@ class World(Canvas):
                     print(t_type.__name__ + ':  N', n, ' mean strength',
                           int(strength_sum / n), ' max strength', max_s)
         # Uncomment the following if you want to show all the genomes
-#        for t in self.things.values():
+#        for t in self.entities.values():
 #            if t.genome:
 #                t.genome.show()
 

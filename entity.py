@@ -2,24 +2,24 @@
 ### Cognitive Science Program, Indiana University
 ### Michael Gasser: gasser@cs.indiana.edu
 ###
-### The things that populate the world, each with an associated Canvas object in the GUI.
+### The entities that populate the world, each with an associated Canvas object in the GUI.
 
 from utils import *
 from brain import *
 from genome import *
 
-## Things create their own Canvas object and record its id (different from self.id)
+## Entities create their own Canvas object and record its id (different from self.id)
 
-class Thing:
+class Entity:
 
     RADIUS = 10
-    """Radius of the Canvas object representing the thing."""
+    """Radius of the Canvas object representing the entity."""
 
     N = 0
-    """Number of things created."""
+    """Number of entities created."""
 
     color = 'red'
-    """Color of the thing's Canvas object."""
+    """Color of the entity's Canvas object."""
 
     outline = 'white'
     """Outline color for Canvas object."""
@@ -28,8 +28,8 @@ class Thing:
         """Initialize location, food type, texture, solidity, id."""
         self.coords = coords
         self.world = world
-        self.food = Thing
-        self.id = Thing.N
+        self.food = Entity
+        self.id = Entity.N
         self.texture = 'empty'
         self.solid = True
         self.alive = False
@@ -37,60 +37,60 @@ class Thing:
         self.create_graphic()
         self.world.tag_bind(self.graphic_id, "<1>", self.describe)
         self.world.tag_bind(self.graphic_id, "<Double-1>", self.describe_verbosely)
-        Thing.N += 1
+        Entity.N += 1
 
     def __str__(self):
-        """Print name for things."""
+        """Print name for entities."""
         return type(self).__name__ + str(self.id)
 
     def create_graphic(self):
-        '''Create a graphic in the world for the Thing, and assign its id.'''
+        '''Create a graphic in the world for the Entity, and assign its id.'''
         x, y = self.coords
-        self.graphic_id = self.world.create_oval(x - Thing.RADIUS, y - Thing.RADIUS,
-                                                 x + Thing.RADIUS, y + Thing.RADIUS,
+        self.graphic_id = self.world.create_oval(x - Entity.RADIUS, y - Entity.RADIUS,
+                                                 x + Entity.RADIUS, y + Entity.RADIUS,
                                                  fill = self.color, outline = self.outline)
 
     def overlapping_same_type(self):
-        '''Does the Thing overlap with another Thing of the same type?'''
-        return self.world.overlapping_thing(self, type(self))
+        '''Does the Entity overlap with another Entity of the same type?'''
+        return self.world.overlapping_entity(self, type(self))
 
     def describe(self, event):
-        '''Print out useful information about the Thing.'''
+        '''Print out useful information about the Entity.'''
         print(self, '-- coordinates:', self.coords)
 
     def describe_verbosely(self, event):
-        """Print out a lot of information about the Thing."""
+        """Print out a lot of information about the Entity."""
         self.describe(event)
 
     def step(self):
-        """Take primitive actions, if any, and update the thing."""
+        """Take primitive actions, if any, and update the entity."""
         pass
 
     def destroy(self):
         """Needed for some subclasses."""
         pass
 
-class Clod(Thing):
+class Clod(Entity):
     """A mineral."""
 
     color = 'blue'
 
     def __init__(self, world, coords):
         """Just for the texture."""
-        Thing.__init__(self, world, coords)
+        Entity.__init__(self, world, coords)
         self.texture = 'hard'
 
-class Fog(Thing):
+class Fog(Entity):
     """Weather."""
 
     color = 'magenta'
 
     def __init__(self, world, coords):
-        Thing.__init__(self, world, coords)
+        Entity.__init__(self, world, coords)
         self.solid = False
 
-class Org(Thing):
-    """A living thing."""
+class Org(Entity):
+    """A living entity."""
 
     INIT_STRENGTH = 300
     """Orgs start out with this strength."""
@@ -102,7 +102,7 @@ class Org(Thing):
     """Number of steps an Org lives."""
 
     def __init__(self, world, coords):
-        Thing.__init__(self, world, coords)
+        Entity.__init__(self, world, coords)
         self.strength = Org.INIT_STRENGTH
         self.max_strength = Org.MAX_STRENGTH
         self.longevity = Org.LONGEVITY
@@ -112,7 +112,7 @@ class Org(Thing):
 
     def step(self):
         # Age by one
-        Thing.step(self)
+        Entity.step(self)
         self.age += 1
         if self.strength <= 0 or self.age >= self.longevity:
             self.die()
@@ -127,36 +127,36 @@ class Org(Thing):
         self.strength = max([0, min([self.max_strength, self.strength])])
 
     def describe(self, event):
-        '''Print out useful information about the Thing.'''
-        Thing.describe(self, event)
+        '''Print out useful information about the Entity.'''
+        Entity.describe(self, event)
         print('  strength:', self.strength)
 
     def describe_verbosely(self, event):
-        """Print out lots of information about the Thing."""
+        """Print out lots of information about the Entity."""
         pass
 
 class Plasmoid(Org):
-    """A plant-like thing."""
+    """A plant-like entity."""
 
     color = 'dark green'
 
     def __init__(self, world, coords):
         Org.__init__(self, world, coords)
         self.texture = 'soft'
-        # Start with a random age so everything doesn't die at the same time
+        # Start with a random age so everyentity doesn't die at the same time
         self.age = random.randint(0, 200)
 
 class Critter(Org):
-    """An animate thing; it can move, turn, and take actions."""
+    """An animate entity; it can move, turn, and take actions."""
 
     STEP_COST = 0
     """Amount a critter suffers just from living one time step."""
 
     HARD_BUMP_COST = -10
-    """Amount a critter suffers when it collides with something hard."""
+    """Amount a critter suffers when it collides with someentity hard."""
 
     SOFT_BUMP_COST = -2
-    """Amount a critter suffers when it collides with something soft."""
+    """Amount a critter suffers when it collides with someentity soft."""
 
     EAT_COST = -3
     """How much an attempt to eat costs."""
@@ -186,7 +186,7 @@ class Critter(Org):
     """Probability of moving."""
 
     CHEW_RANGE = 8
-    """Distance within which something can be chewed."""
+    """Distance within which someentity can be chewed."""
 
     mouth_angle = 20
     """Opening of the critter's mouth."""
@@ -206,10 +206,10 @@ class Critter(Org):
         self.genome = None
 
     def create_graphic(self):
-        """Override create_graphic in Thing, to make a body with a mouth."""
+        """Override create_graphic in Entity, to make a body with a mouth."""
         x, y = self.coords
-        self.graphic_id = self.world.create_arc(x - Thing.RADIUS, y - Thing.RADIUS,
-                                                x + Thing.RADIUS, y + Thing.RADIUS,
+        self.graphic_id = self.world.create_arc(x - Entity.RADIUS, y - Entity.RADIUS,
+                                                x + Entity.RADIUS, y + Entity.RADIUS,
                                                 # A little mouth
                                                 start=self.heading + self.mouth_angle / 2,
                                                 extent= 360 - self.mouth_angle,
@@ -229,7 +229,7 @@ class Critter(Org):
                            self.sensor, learning=False, genetic=False)
 
     def describe(self, event):
-        '''Print out useful information about the Thing.'''
+        '''Print out useful information about the Entity.'''
         Org.describe(self, event)
         sensed = self.sensor.sense()
         print('  sensed:', sensed)
@@ -237,7 +237,7 @@ class Critter(Org):
             print('  brain output:', self.brain.run(sensed))
 
     def describe_verbosely(self, event):
-        """Print out lots of information about the Thing."""
+        """Print out lots of information about the Entity."""
         self.brain.show_weights()
 
     def destroy(self):
@@ -246,10 +246,10 @@ class Critter(Org):
 
     def mouth_end(self):
         '''Coordinates of the point where the mouth opens.'''
-        return get_endpoint(self.coords[0], self.coords[1], self.heading, Thing.RADIUS)
+        return get_endpoint(self.coords[0], self.coords[1], self.heading, Entity.RADIUS)
 
     def get_chewable(self):
-        '''Things overlapping with the critter.'''
+        '''Entities overlapping with the critter.'''
         end_x, end_y = self.mouth_end()
         return self.world.get_overlapping((end_x - Critter.CHEW_RANGE, end_y - Critter.CHEW_RANGE ,
                                            end_x + Critter.CHEW_RANGE, end_y + Critter.CHEW_RANGE),
@@ -264,7 +264,7 @@ class Critter(Org):
         if self.brain.genetic:
             overlap = self.overlapping_same_type()
             if overlap:
-                # Mate with overlapping Thing?  But not till the end of the time step.
+                # Mate with overlapping Entity?  But not till the end of the time step.
                 if (overlap, self) not in self.world.to_mate and random.random() < self.mate_prob(overlap):
                     self.world.to_mate.append((self, overlap))
         # Sense
@@ -288,19 +288,19 @@ class Critter(Org):
         x_dist, y_dist = xy_dist(self.heading, self.move_dist)
         x, y = self.world.adjust_coords(self.coords[0] + x_dist,
                                         self.coords[1] + y_dist)
-        x1 = max(0, x - Thing.RADIUS + Critter.BUMP_OFFSET)
-        y1 = max(0, y - Thing.RADIUS + Critter.BUMP_OFFSET)
-        x2 = min(self.world.width, x + Thing.RADIUS - Critter.BUMP_OFFSET)
-        y2 = min(self.world.height, y + Thing.RADIUS - Critter.BUMP_OFFSET)
+        x1 = max(0, x - Entity.RADIUS + Critter.BUMP_OFFSET)
+        y1 = max(0, y - Entity.RADIUS + Critter.BUMP_OFFSET)
+        x2 = min(self.world.width, x + Entity.RADIUS - Critter.BUMP_OFFSET)
+        y2 = min(self.world.height, y + Entity.RADIUS - Critter.BUMP_OFFSET)
         if self.world.overlaps_with(x1, y1, x2, y2,
                                     Clod):
-            # Fail to move and get punished for the collision with the thing
+            # Fail to move and get punished for the collision with the entity
             return Critter.HARD_BUMP_COST
         else:
             # Go ahead and move
             self.world.coords(self.graphic_id,
-                              x - Thing.RADIUS, y - Thing.RADIUS,
-                              x + Thing.RADIUS, y + Thing.RADIUS)
+                              x - Entity.RADIUS, y - Entity.RADIUS,
+                              x + Entity.RADIUS, y + Entity.RADIUS)
             self.coords = x, y
             self.sensor.move()
             return Critter.MOVE_COST
@@ -439,7 +439,7 @@ class Sensor:
         return 0
 
     def sense_symbolic(self):
-        '''A list of features of things sensed.'''
+        '''A list of features of entities sensed.'''
         return [random.choice(self.features) for i in range(random.randint(0, 5))]
 
     def symbolic2binary(self, symbols):

@@ -249,7 +249,7 @@ class QLearner:
     """Discount rate for Q learning."""
 
     def __init__(self, brain):
-        """Initialize the 3 things that need to be remembered from the previous time step."""
+        """Initialize the 3 entities that need to be remembered from the previous time step."""
         self.brain = brain
         self.last_reinforcement = 0
         self.last_state = None
